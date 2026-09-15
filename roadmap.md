@@ -9,9 +9,9 @@ Standalone phases.
 - [x] Tailwind wired to a single theme config using the design tokens in `README.md` / `AGENTS.md` (primary `#2450E0`, neutral grays, system font stack, `6px` radius)
 
 ## Phase 1: Types + mock data + dummy API layer
-- [ ] `types/decision.ts`, `types/project.ts`
-- [ ] `api/mockData.ts`: in-memory seed data
-- [ ] `api/decisions.ts`, `api/projects.ts`: async functions with simulated delay
+- [x] `types/decision.ts`, `types/project.ts`
+- [x] `api/mockData.ts`: in-memory seed data
+- [x] `api/decisions.ts`, `api/projects.ts`: async functions with simulated delay
 
 ## Phase 2: State layer
 - [ ] `hooks/useDecisions.ts` backed by `useReducer`
