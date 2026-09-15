@@ -18,7 +18,7 @@ Standalone phases.
 - [x] Actions: fetch start/success/error, add, update, delete, toggle status
 
 ## Phase 3: Routing skeleton
-- [ ] `/` landing placeholder, `/app` Decision Log
+- [x] `/` landing placeholder, `/app` Decision Log
 
 ## Phase 4: Decision Log core UI (desktop list)
 - [ ] List view, all fields, newest-first, paginated (10/page)

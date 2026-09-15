@@ -1,7 +1,14 @@
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import DecisionLog from "./pages/DecisionLog";
+import Landing from "./pages/Landing";
+
 export default function App() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-page font-sans text-text-primary">
-      <h1 className="text-2xl font-semibold">Decision Log</h1>
-    </main>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/app" element={<DecisionLog />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
