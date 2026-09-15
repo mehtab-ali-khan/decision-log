@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import toast from "react-hot-toast";
 import { getProjects } from "../api/projects";
 import { useDecisions } from "../hooks/useDecisions";
+import type { Decision } from "../types/decision";
 
 const PAGE_SIZE = 10;
 
@@ -28,35 +29,39 @@ function getNextProjectName(projects: string[]): string {
 }
 
 function createInitialForm(project = "Project1"): DecisionFormData {
+  return { date: getToday(), project, text: "", reason: "", active: true };
+}
+
+function getFormData(decision: Decision): DecisionFormData {
   return {
-    date: getToday(),
-    project,
-    text: "",
-    reason: "",
-    active: true,
+    date: decision.date,
+    project: decision.project,
+    text: decision.text,
+    reason: decision.reason,
+    active: decision.active,
   };
 }
 
 function formatDate(date: string): string {
-  return new Intl.DateTimeFormat("en", {
-    dateStyle: "medium",
-  }).format(new Date(`${date}T00:00:00`));
+  return new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(
+    new Date(`${date}T00:00:00`),
+  );
 }
 
 function DecisionTableSkeleton() {
   return (
     <div className="overflow-hidden rounded border border-border bg-surface">
-      <div className="grid grid-cols-5 gap-4 border-b border-border px-4 py-3">
-        {Array.from({ length: 5 }, (_, index) => (
+      <div className="grid grid-cols-6 gap-4 border-b border-border px-4 py-3">
+        {Array.from({ length: 6 }, (_, index) => (
           <div className="h-4 animate-pulse rounded bg-border" key={index} />
         ))}
       </div>
       {Array.from({ length: 5 }, (_, index) => (
         <div
-          className="grid grid-cols-5 gap-4 border-b border-border px-4 py-5 last:border-b-0"
+          className="grid grid-cols-6 gap-4 border-b border-border px-4 py-5 last:border-b-0"
           key={index}
         >
-          {Array.from({ length: 5 }, (_, cellIndex) => (
+          {Array.from({ length: 6 }, (_, cellIndex) => (
             <div
               className="h-4 animate-pulse rounded bg-border"
               key={cellIndex}
@@ -69,17 +74,19 @@ function DecisionTableSkeleton() {
 }
 
 function DecisionForm({
-  initialProject,
+  initialValues,
+  isEditing,
   projectOptions,
   onCancel,
   onSubmit,
 }: {
-  initialProject: string;
+  initialValues: DecisionFormData;
+  isEditing: boolean;
   projectOptions: string[];
   onCancel: () => void;
   onSubmit: (form: DecisionFormData) => void;
 }) {
-  const [form, setForm] = useState(() => createInitialForm(initialProject));
+  const [form, setForm] = useState(initialValues);
 
   function updateField<Key extends keyof DecisionFormData>(
     field: Key,
@@ -88,20 +95,26 @@ function DecisionForm({
     setForm((currentForm) => ({ ...currentForm, [field]: value }));
   }
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    onSubmit({ ...form, project: form.project.trim(), text: form.text.trim(), reason: form.reason.trim() });
+    onSubmit({
+      ...form,
+      project: form.project.trim(),
+      text: form.text.trim(),
+      reason: form.reason.trim(),
+    });
   }
 
   return (
-    <form
-      className="rounded border border-border bg-surface p-6"
-      onSubmit={handleSubmit}
-    >
+    <form className="rounded border border-border bg-surface p-6" onSubmit={handleSubmit}>
       <div className="mb-6">
-        <h2 className="text-lg font-semibold">Create decision</h2>
+        <h2 className="text-lg font-semibold">
+          {isEditing ? "Edit decision" : "Create decision"}
+        </h2>
         <p className="mt-1 text-sm text-text-secondary">
-          Record what was decided and why.
+          {isEditing
+            ? "Update the details of this decision."
+            : "Record what was decided and why."}
         </p>
       </div>
 
@@ -170,7 +183,7 @@ function DecisionForm({
           className="rounded bg-primary px-4 py-2 text-sm font-medium text-surface transition-opacity hover:opacity-90"
           type="submit"
         >
-          Save decision
+          {isEditing ? "Save changes" : "Save decision"}
         </button>
         <button
           className="rounded border border-border bg-surface px-4 py-2 text-sm transition-opacity hover:opacity-70"
@@ -184,11 +197,62 @@ function DecisionForm({
   );
 }
 
+function DeleteDialog({
+  decision,
+  onCancel,
+  onConfirm,
+}: {
+  decision: Decision;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-10 flex items-center justify-center bg-text-primary/40 px-page">
+      <section
+        aria-modal="true"
+        className="w-full max-w-md rounded border border-border bg-surface p-6 shadow-lg"
+        role="dialog"
+      >
+        <h2 className="text-lg font-semibold">Delete this decision?</h2>
+        <p className="mt-2 text-sm text-text-secondary">
+          This will remove “{decision.text}”. This can&apos;t be undone.
+        </p>
+        <div className="mt-6 flex justify-end gap-3">
+          <button
+            className="rounded border border-border bg-surface px-4 py-2 text-sm transition-opacity hover:opacity-70"
+            onClick={onCancel}
+            type="button"
+          >
+            Cancel
+          </button>
+          <button
+            className="rounded bg-primary px-4 py-2 text-sm font-medium text-surface transition-opacity hover:opacity-90"
+            onClick={onConfirm}
+            type="button"
+          >
+            Delete decision
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export default function DecisionLog() {
-  const { decisions, loading, error, fetchDecisions, addDecision } =
-    useDecisions();
+  const {
+    decisions,
+    loading,
+    error,
+    fetchDecisions,
+    addDecision,
+    updateDecision,
+    deleteDecision,
+    toggleDecisionStatus,
+  } = useDecisions();
   const [page, setPage] = useState(1);
-  const [showForm, setShowForm] = useState(false);
+  const [formMode, setFormMode] = useState<"create" | "edit" | null>(null);
+  const [editingDecision, setEditingDecision] = useState<Decision | null>(null);
+  const [decisionToDelete, setDecisionToDelete] = useState<Decision | null>(null);
   const [projectOptions, setProjectOptions] = useState<string[]>([]);
 
   useEffect(() => {
@@ -225,12 +289,40 @@ export default function DecisionLog() {
     }
   }, [page, pageCount]);
 
-  function handleCreate(form: DecisionFormData) {
-    addDecision(form);
-    setShowForm(false);
-    setPage(1);
-    toast.success("Decision saved");
+  function handleFormSubmit(form: DecisionFormData) {
+    if (formMode === "edit" && editingDecision) {
+      updateDecision({ ...form, id: editingDecision.id });
+      toast.success("Decision updated");
+    } else {
+      addDecision(form);
+      setPage(1);
+      toast.success("Decision saved");
+    }
+    setFormMode(null);
+    setEditingDecision(null);
   }
+
+  function openEditForm(decision: Decision) {
+    setEditingDecision(decision);
+    setFormMode("edit");
+  }
+
+  function handleToggle(decision: Decision) {
+    toggleDecisionStatus(decision.id);
+    toast.success(`Decision marked ${decision.active ? "inactive" : "active"}`);
+  }
+
+  function handleDelete() {
+    if (!decisionToDelete) return;
+    deleteDecision(decisionToDelete.id);
+    setDecisionToDelete(null);
+    toast.success("Decision deleted");
+  }
+
+  const formInitialValues =
+    editingDecision && formMode === "edit"
+      ? getFormData(editingDecision)
+      : createInitialForm(defaultProject);
 
   return (
     <main className="min-h-screen bg-background px-page py-section font-sans text-text-primary">
@@ -240,10 +332,10 @@ export default function DecisionLog() {
             <p className="mb-2 text-sm text-text-secondary">Workspace</p>
             <h1 className="text-2xl font-semibold">Decision Log</h1>
           </div>
-          {!showForm && (
+          {formMode === null && (
             <button
               className="rounded bg-primary px-4 py-2 text-sm font-medium text-surface transition-opacity hover:opacity-90"
-              onClick={() => setShowForm(true)}
+              onClick={() => setFormMode("create")}
               type="button"
             >
               Add decision
@@ -251,11 +343,16 @@ export default function DecisionLog() {
           )}
         </div>
 
-        {showForm && (
+        {formMode !== null && (
           <DecisionForm
-            initialProject={defaultProject}
-            onCancel={() => setShowForm(false)}
-            onSubmit={handleCreate}
+            initialValues={formInitialValues}
+            isEditing={formMode === "edit"}
+            key={editingDecision?.id ?? "create"}
+            onCancel={() => {
+              setFormMode(null);
+              setEditingDecision(null);
+            }}
+            onSubmit={handleFormSubmit}
             projectOptions={projectOptions}
           />
         )}
@@ -296,6 +393,7 @@ export default function DecisionLog() {
                     <th className="px-4 py-3 font-medium" scope="col">Decision</th>
                     <th className="px-4 py-3 font-medium" scope="col">Reason</th>
                     <th className="px-4 py-3 font-medium" scope="col">Status</th>
+                    <th className="px-4 py-3 font-medium" scope="col">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -306,13 +404,35 @@ export default function DecisionLog() {
                       <td className="px-4 py-4">{decision.text}</td>
                       <td className="px-4 py-4 text-text-secondary">{decision.reason}</td>
                       <td className="whitespace-nowrap px-4 py-4">
-                        <span className="inline-flex items-center gap-2">
+                        <button
+                          className="inline-flex items-center gap-2 rounded px-1 py-1 text-sm transition-opacity hover:opacity-70"
+                          onClick={() => handleToggle(decision)}
+                          type="button"
+                        >
                           <span
                             aria-hidden="true"
                             className={`h-2 w-2 rounded-full ${decision.active ? "bg-primary" : "bg-text-secondary"}`}
                           />
                           {decision.active ? "Active" : "Inactive"}
-                        </span>
+                        </button>
+                      </td>
+                      <td className="whitespace-nowrap px-4 py-4">
+                        <div className="flex gap-3">
+                          <button
+                            className="text-sm font-medium text-primary transition-opacity hover:opacity-70"
+                            onClick={() => openEditForm(decision)}
+                            type="button"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="text-sm font-medium text-text-secondary transition-opacity hover:opacity-70"
+                            onClick={() => setDecisionToDelete(decision)}
+                            type="button"
+                          >
+                            Delete
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -344,6 +464,14 @@ export default function DecisionLog() {
           </>
         )}
       </div>
+
+      {decisionToDelete && (
+        <DeleteDialog
+          decision={decisionToDelete}
+          onCancel={() => setDecisionToDelete(null)}
+          onConfirm={handleDelete}
+        />
+      )}
     </main>
   );
 }

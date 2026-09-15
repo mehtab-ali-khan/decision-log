@@ -29,9 +29,9 @@ Standalone phases.
 - [x] Toast on success
 
 ## Phase 6: Edit / delete / toggle active
-- [ ] Edit form (prefilled, project changeable)
-- [ ] Delete with confirm dialog + toast
-- [ ] Inline active/inactive toggle + toast
+- [x] Edit form (prefilled, project changeable)
+- [x] Delete with confirm dialog + toast
+- [x] Inline active/inactive toggle + toast
 
 ## Phase 7: Search + filters
 - [ ] Single search bar across all fields
