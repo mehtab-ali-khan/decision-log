@@ -14,8 +14,8 @@ Standalone phases.
 - [x] `api/decisions.ts`, `api/projects.ts`: async functions with simulated delay
 
 ## Phase 2: State layer
-- [ ] `hooks/useDecisions.ts` backed by `useReducer`
-- [ ] Actions: fetch start/success/error, add, update, delete, toggle status
+- [x] `hooks/useDecisions.ts` backed by `useReducer`
+- [x] Actions: fetch start/success/error, add, update, delete, toggle status
 
 ## Phase 3: Routing skeleton
 - [ ] `/` landing placeholder, `/app` Decision Log
