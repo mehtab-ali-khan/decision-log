@@ -1,7 +1,41 @@
 import { useEffect, useMemo, useState } from "react";
+import toast from "react-hot-toast";
+import { getProjects } from "../api/projects";
 import { useDecisions } from "../hooks/useDecisions";
 
 const PAGE_SIZE = 10;
+
+type DecisionFormData = {
+  date: string;
+  project: string;
+  text: string;
+  reason: string;
+  active: boolean;
+};
+
+function getToday(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function getNextProjectName(projects: string[]): string {
+  const highestProjectNumber = projects.reduce((highest, project) => {
+    const match = project.match(/^Project(\d+)$/i);
+    const number = match ? Number(match[1]) : 0;
+    return Math.max(highest, number);
+  }, 0);
+
+  return `Project${highestProjectNumber + 1}`;
+}
+
+function createInitialForm(project = "Project1"): DecisionFormData {
+  return {
+    date: getToday(),
+    project,
+    text: "",
+    reason: "",
+    active: true,
+  };
+}
 
 function formatDate(date: string): string {
   return new Intl.DateTimeFormat("en", {
@@ -14,10 +48,7 @@ function DecisionTableSkeleton() {
     <div className="overflow-hidden rounded border border-border bg-surface">
       <div className="grid grid-cols-5 gap-4 border-b border-border px-4 py-3">
         {Array.from({ length: 5 }, (_, index) => (
-          <div
-            className="h-4 animate-pulse rounded bg-border"
-            key={index}
-          />
+          <div className="h-4 animate-pulse rounded bg-border" key={index} />
         ))}
       </div>
       {Array.from({ length: 5 }, (_, index) => (
@@ -37,10 +68,144 @@ function DecisionTableSkeleton() {
   );
 }
 
-export default function DecisionLog() {
-  const { decisions, loading, error, fetchDecisions } = useDecisions();
-  const [page, setPage] = useState(1);
+function DecisionForm({
+  initialProject,
+  projectOptions,
+  onCancel,
+  onSubmit,
+}: {
+  initialProject: string;
+  projectOptions: string[];
+  onCancel: () => void;
+  onSubmit: (form: DecisionFormData) => void;
+}) {
+  const [form, setForm] = useState(() => createInitialForm(initialProject));
 
+  function updateField<Key extends keyof DecisionFormData>(
+    field: Key,
+    value: DecisionFormData[Key],
+  ) {
+    setForm((currentForm) => ({ ...currentForm, [field]: value }));
+  }
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    onSubmit({ ...form, project: form.project.trim(), text: form.text.trim(), reason: form.reason.trim() });
+  }
+
+  return (
+    <form
+      className="rounded border border-border bg-surface p-6"
+      onSubmit={handleSubmit}
+    >
+      <div className="mb-6">
+        <h2 className="text-lg font-semibold">Create decision</h2>
+        <p className="mt-1 text-sm text-text-secondary">
+          Record what was decided and why.
+        </p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <label className="flex flex-col gap-2 text-sm font-medium">
+          Date
+          <input
+            className="rounded border border-border bg-surface px-3 py-2 font-normal outline-none transition-colors focus:border-primary"
+            onChange={(event) => updateField("date", event.target.value)}
+            required
+            type="date"
+            value={form.date}
+          />
+        </label>
+
+        <label className="flex flex-col gap-2 text-sm font-medium">
+          Project
+          <input
+            className="rounded border border-border bg-surface px-3 py-2 font-normal outline-none transition-colors focus:border-primary"
+            list="project-options"
+            onChange={(event) => updateField("project", event.target.value)}
+            required
+            type="text"
+            value={form.project}
+          />
+          <datalist id="project-options">
+            {projectOptions.map((project) => (
+              <option key={project} value={project} />
+            ))}
+          </datalist>
+        </label>
+
+        <label className="flex flex-col gap-2 text-sm font-medium md:col-span-2">
+          Decision
+          <textarea
+            className="min-h-24 resize-y rounded border border-border bg-surface px-3 py-2 font-normal outline-none transition-colors focus:border-primary"
+            onChange={(event) => updateField("text", event.target.value)}
+            required
+            value={form.text}
+          />
+        </label>
+
+        <label className="flex flex-col gap-2 text-sm font-medium md:col-span-2">
+          Reason
+          <textarea
+            className="min-h-24 resize-y rounded border border-border bg-surface px-3 py-2 font-normal outline-none transition-colors focus:border-primary"
+            onChange={(event) => updateField("reason", event.target.value)}
+            required
+            value={form.reason}
+          />
+        </label>
+      </div>
+
+      <label className="mt-5 flex items-center gap-3 text-sm font-medium">
+        <input
+          checked={form.active}
+          className="h-4 w-4 accent-primary"
+          onChange={(event) => updateField("active", event.target.checked)}
+          type="checkbox"
+        />
+        Active decision
+      </label>
+
+      <div className="mt-6 flex gap-3">
+        <button
+          className="rounded bg-primary px-4 py-2 text-sm font-medium text-surface transition-opacity hover:opacity-90"
+          type="submit"
+        >
+          Save decision
+        </button>
+        <button
+          className="rounded border border-border bg-surface px-4 py-2 text-sm transition-opacity hover:opacity-70"
+          onClick={onCancel}
+          type="button"
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
+export default function DecisionLog() {
+  const { decisions, loading, error, fetchDecisions, addDecision } =
+    useDecisions();
+  const [page, setPage] = useState(1);
+  const [showForm, setShowForm] = useState(false);
+  const [projectOptions, setProjectOptions] = useState<string[]>([]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    getProjects().then((projects) => {
+      if (mounted) {
+        setProjectOptions(projects.map((project) => project.name));
+      }
+    });
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const defaultProject = getNextProjectName(projectOptions);
   const sortedDecisions = useMemo(
     () =>
       [...decisions].sort((first, second) =>
@@ -60,13 +225,40 @@ export default function DecisionLog() {
     }
   }, [page, pageCount]);
 
+  function handleCreate(form: DecisionFormData) {
+    addDecision(form);
+    setShowForm(false);
+    setPage(1);
+    toast.success("Decision saved");
+  }
+
   return (
     <main className="min-h-screen bg-background px-page py-section font-sans text-text-primary">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-section">
-        <div>
-          <p className="mb-2 text-sm text-text-secondary">Workspace</p>
-          <h1 className="text-2xl font-semibold">Decision Log</h1>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="mb-2 text-sm text-text-secondary">Workspace</p>
+            <h1 className="text-2xl font-semibold">Decision Log</h1>
+          </div>
+          {!showForm && (
+            <button
+              className="rounded bg-primary px-4 py-2 text-sm font-medium text-surface transition-opacity hover:opacity-90"
+              onClick={() => setShowForm(true)}
+              type="button"
+            >
+              Add decision
+            </button>
+          )}
         </div>
+
+        {showForm && (
+          <DecisionForm
+            initialProject={defaultProject}
+            onCancel={() => setShowForm(false)}
+            onSubmit={handleCreate}
+            projectOptions={projectOptions}
+          />
+        )}
 
         {loading && <DecisionTableSkeleton />}
 
@@ -99,39 +291,20 @@ export default function DecisionLog() {
               <table className="w-full border-collapse text-left text-sm">
                 <thead className="border-b border-border text-text-secondary">
                   <tr>
-                    <th className="px-4 py-3 font-medium" scope="col">
-                      Date
-                    </th>
-                    <th className="px-4 py-3 font-medium" scope="col">
-                      Project
-                    </th>
-                    <th className="px-4 py-3 font-medium" scope="col">
-                      Decision
-                    </th>
-                    <th className="px-4 py-3 font-medium" scope="col">
-                      Reason
-                    </th>
-                    <th className="px-4 py-3 font-medium" scope="col">
-                      Status
-                    </th>
+                    <th className="px-4 py-3 font-medium" scope="col">Date</th>
+                    <th className="px-4 py-3 font-medium" scope="col">Project</th>
+                    <th className="px-4 py-3 font-medium" scope="col">Decision</th>
+                    <th className="px-4 py-3 font-medium" scope="col">Reason</th>
+                    <th className="px-4 py-3 font-medium" scope="col">Status</th>
                   </tr>
                 </thead>
                 <tbody>
                   {visibleDecisions.map((decision) => (
-                    <tr
-                      className="border-b border-border last:border-b-0"
-                      key={decision.id}
-                    >
-                      <td className="whitespace-nowrap px-4 py-4 text-text-secondary">
-                        {formatDate(decision.date)}
-                      </td>
-                      <td className="whitespace-nowrap px-4 py-4 font-medium">
-                        {decision.project}
-                      </td>
+                    <tr className="border-b border-border last:border-b-0" key={decision.id}>
+                      <td className="whitespace-nowrap px-4 py-4 text-text-secondary">{formatDate(decision.date)}</td>
+                      <td className="whitespace-nowrap px-4 py-4 font-medium">{decision.project}</td>
                       <td className="px-4 py-4">{decision.text}</td>
-                      <td className="px-4 py-4 text-text-secondary">
-                        {decision.reason}
-                      </td>
+                      <td className="px-4 py-4 text-text-secondary">{decision.reason}</td>
                       <td className="whitespace-nowrap px-4 py-4">
                         <span className="inline-flex items-center gap-2">
                           <span
@@ -147,13 +320,8 @@ export default function DecisionLog() {
               </table>
             </div>
 
-            <nav
-              aria-label="Decision pagination"
-              className="flex items-center justify-between"
-            >
-              <p className="text-sm text-text-secondary">
-                Page {page} of {pageCount}
-              </p>
+            <nav aria-label="Decision pagination" className="flex items-center justify-between">
+              <p className="text-sm text-text-secondary">Page {page} of {pageCount}</p>
               <div className="flex gap-2">
                 <button
                   className="rounded border border-border bg-surface px-4 py-2 text-sm transition-opacity disabled:cursor-not-allowed disabled:opacity-50"

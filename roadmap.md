@@ -25,8 +25,8 @@ Standalone phases.
 - [x] Skeleton loader, empty state
 
 ## Phase 5: Create decision
-- [ ] Form: default current date, project (hybrid select/text, auto-increment default), decision text, reason, active toggle default true
-- [ ] Toast on success
+- [x] Form: default current date, project (hybrid select/text, auto-increment default), decision text, reason, active toggle default true
+- [x] Toast on success
 
 ## Phase 6: Edit / delete / toggle active
 - [ ] Edit form (prefilled, project changeable)
