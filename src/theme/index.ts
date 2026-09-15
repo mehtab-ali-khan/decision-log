@@ -1,16 +1,45 @@
 export const theme = {
   colors: {
-    primary: "#2450E0",
-    background: "#FAFAFA",
+    primary: {
+      DEFAULT: "#2450E0",
+      hover: "#1D42C2",
+      subtle: "#EEF2FE",
+      fg: "#1B3DB0",
+    },
+    accent: {
+      DEFAULT: "#7C5CFF",
+      subtle: "#F3F0FF",
+      fg: "#5B3FD1",
+    },
+    success: {
+      DEFAULT: "#059669",
+      subtle: "#ECFDF5",
+      fg: "#047857",
+    },
+    danger: {
+      DEFAULT: "#DC2626",
+      hover: "#B91C1C",
+      subtle: "#FEF2F2",
+      fg: "#B42318",
+    },
+    warning: {
+      DEFAULT: "#D97706",
+      subtle: "#FFFBEB",
+      fg: "#B45309",
+    },
+    background: "#F7F8FB",
     surface: "#FFFFFF",
-    border: "#E5E5E5",
+    muted: "#F1F4F9",
+    border: "#E4E8EF",
     text: {
-      primary: "#171717",
-      secondary: "#6B6B6B",
+      primary: "#111827",
+      secondary: "#5B6472",
+      tertiary: "#8A94A6",
     },
   },
   fontFamily: {
     sans: [
+      "Inter",
       "-apple-system",
       "BlinkMacSystemFont",
       '"Segoe UI"',
@@ -20,8 +49,29 @@ export const theme = {
       "sans-serif",
     ],
   },
+  fontSize: {
+    display: ["2.75rem", { lineHeight: "1.05", letterSpacing: "-0.032em", fontWeight: "700" }],
+    h1: ["1.875rem", { lineHeight: "1.15", letterSpacing: "-0.022em", fontWeight: "700" }],
+    h2: ["1.25rem", { lineHeight: "1.3", letterSpacing: "-0.016em", fontWeight: "600" }],
+    h3: ["1rem", { lineHeight: "1.4", letterSpacing: "-0.011em", fontWeight: "600" }],
+    body: ["0.9375rem", { lineHeight: "1.6", letterSpacing: "-0.003em" }],
+    small: ["0.8438rem", { lineHeight: "1.5" }],
+    caption: ["0.75rem", { lineHeight: "1.4", letterSpacing: "0.004em" }],
+  },
   borderRadius: {
-    DEFAULT: "6px",
+    sm: "6px",
+    DEFAULT: "10px",
+    md: "10px",
+    lg: "14px",
+    xl: "20px",
+    "2xl": "28px",
+    full: "9999px",
+  },
+  boxShadow: {
+    raised: "0 1px 2px 0 rgb(16 24 40 / 0.04), 0 1px 3px 0 rgb(16 24 40 / 0.07)",
+    lifted: "0 4px 10px -2px rgb(16 24 40 / 0.07), 0 2px 4px -2px rgb(16 24 40 / 0.05)",
+    popover: "0 12px 24px -8px rgb(16 24 40 / 0.16), 0 4px 8px -4px rgb(16 24 40 / 0.08)",
+    overlay: "0 28px 56px -16px rgb(16 24 40 / 0.22), 0 8px 20px -8px rgb(16 24 40 / 0.12)",
   },
   spacing: {
     page: "24px",

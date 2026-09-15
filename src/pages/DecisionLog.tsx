@@ -1,11 +1,22 @@
+import { AlertCircle, Plus, Sparkles, SearchX, Wand2 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import toast from "react-hot-toast";
+import { createSampleDecisions } from "../api/mockData";
 import { getProjects } from "../api/projects";
-import { DeleteDecisionDialog } from "../components/decisions/DeleteDecisionDialog";
-import { DecisionFilters, type StatusFilter } from "../components/decisions/DecisionFilters";
+import {
+  DecisionFilters,
+  type SortOrder,
+  type StatusFilter,
+} from "../components/decisions/DecisionFilters";
 import { DecisionForm, type DecisionFormData } from "../components/decisions/DecisionForm";
-import { DecisionPagination, DecisionTable, DecisionTableSkeleton } from "../components/decisions/DecisionTable";
+import { DecisionList, DecisionListSkeleton } from "../components/decisions/DecisionList";
+import { DecisionPagination } from "../components/decisions/DecisionPagination";
+import { DecisionStats } from "../components/decisions/DecisionStats";
 import { formatDate } from "../components/decisions/formatDate";
+import { TopBar } from "../components/layout/TopBar";
+import { ConfirmDialog } from "../components/ui/ConfirmDialog";
+import { EmptyState } from "../components/ui/EmptyState";
+import { useDebouncedValue } from "../hooks/useDebouncedValue";
 import { useDecisions } from "../hooks/useDecisions";
 import type { Decision } from "../types/decision";
 
@@ -24,10 +35,6 @@ function getNextProjectName(projects: string[]): string {
   return `Project${highestProjectNumber + 1}`;
 }
 
-function createInitialForm(project = "Project1"): DecisionFormData {
-  return { date: getToday(), project, text: "", reason: "", active: true };
-}
-
 function getFormData({ id: _id, ...formData }: Decision): DecisionFormData {
   return formData;
 }
@@ -39,6 +46,7 @@ export default function DecisionLog() {
     error,
     fetchDecisions,
     addDecision,
+    setDecisions,
     updateDecision,
     deleteDecision,
     toggleDecisionStatus,
@@ -51,6 +59,9 @@ export default function DecisionLog() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [projectFilter, setProjectFilter] = useState("all");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("newest");
+
+  const debouncedSearch = useDebouncedValue(search);
 
   useEffect(() => {
     let mounted = true;
@@ -58,50 +69,73 @@ export default function DecisionLog() {
       if (mounted) setProjectOptions(projects.map((project) => project.name));
     });
 
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   const availableProjects = useMemo(
-    () => [...new Set([...projectOptions, ...decisions.map((decision) => decision.project)])].sort((first, second) => first.localeCompare(second)),
+    () =>
+      [...new Set([...projectOptions, ...decisions.map((decision) => decision.project)])].sort(
+        (first, second) => first.localeCompare(second),
+      ),
     [decisions, projectOptions],
   );
+
   const filteredDecisions = useMemo(() => {
-    const normalizedSearch = search.trim().toLowerCase();
+    const normalizedSearch = debouncedSearch.trim().toLowerCase();
 
     return decisions.filter((decision) => {
-      const matchesSearch = normalizedSearch.length === 0 || [
-        decision.id,
-        decision.date,
-        formatDate(decision.date),
-        decision.project,
-        decision.text,
-        decision.reason,
-        decision.active ? "active" : "inactive",
-      ].some((value) => value.toLowerCase().includes(normalizedSearch));
-      const matchesStatus = statusFilter === "all" ||
+      const matchesSearch =
+        normalizedSearch.length === 0 ||
+        [
+          formatDate(decision.date),
+          decision.project,
+          decision.text,
+          decision.reason,
+          decision.active ? "active" : "inactive",
+        ].some((value) => value.toLowerCase().includes(normalizedSearch));
+      const matchesStatus =
+        statusFilter === "all" ||
         (statusFilter === "active" && decision.active) ||
         (statusFilter === "inactive" && !decision.active);
       const matchesProject = projectFilter === "all" || decision.project === projectFilter;
 
       return matchesSearch && matchesStatus && matchesProject;
     });
-  }, [decisions, projectFilter, search, statusFilter]);
+  }, [debouncedSearch, decisions, projectFilter, statusFilter]);
+
   const sortedDecisions = useMemo(
-    () => [...filteredDecisions].sort((first, second) => second.date.localeCompare(first.date)),
-    [filteredDecisions],
+    () =>
+      [...filteredDecisions].sort((first, second) =>
+        sortOrder === "newest"
+          ? second.date.localeCompare(first.date)
+          : first.date.localeCompare(second.date),
+      ),
+    [filteredDecisions, sortOrder],
   );
+
   const pageCount = Math.max(1, Math.ceil(sortedDecisions.length / PAGE_SIZE));
   const visibleDecisions = sortedDecisions.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+  const activeCount = decisions.filter((decision) => decision.active).length;
 
   useEffect(() => {
     if (page > pageCount) setPage(pageCount);
   }, [page, pageCount]);
 
-  useEffect(() => { setPage(1); }, [projectFilter, search, statusFilter]);
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch, projectFilter, sortOrder, statusFilter]);
 
   function closeForm() {
     setFormMode(null);
     setEditingDecision(null);
+  }
+
+  function clearFilters() {
+    setSearch("");
+    setStatusFilter("all");
+    setProjectFilter("all");
   }
 
   function handleFormSubmit(form: DecisionFormData) {
@@ -118,49 +152,182 @@ export default function DecisionLog() {
 
   function handleToggle(decision: Decision) {
     toggleDecisionStatus(decision.id);
-    toast.success(`Decision marked ${decision.active ? "inactive" : "active"}`);
+    toast.success(`Marked ${decision.active ? "inactive" : "active"}`);
   }
 
-  function handleDelete() {
+  function confirmDelete() {
     if (!decisionToDelete) return;
     deleteDecision(decisionToDelete.id);
     setDecisionToDelete(null);
     toast.success("Decision deleted");
   }
 
-  const formInitialValues = editingDecision && formMode === "edit"
-    ? getFormData(editingDecision)
-    : createInitialForm(getNextProjectName(projectOptions));
+  function loadSampleData() {
+    setDecisions(createSampleDecisions());
+    setPage(1);
+    toast.success("Sample data added");
+  }
+
+  function startEditing(decision: Decision) {
+    setEditingDecision(decision);
+    setFormMode("edit");
+  }
+
+  const defaultProject =
+    decisions[0]?.project ?? availableProjects[0] ?? getNextProjectName(projectOptions);
+  const formInitialValues =
+    editingDecision && formMode === "edit"
+      ? getFormData(editingDecision)
+      : { date: getToday(), project: defaultProject, text: "", reason: "", active: true };
+
+  const hasDecisions = decisions.length > 0;
+  const hasResults = filteredDecisions.length > 0;
 
   return (
-    <main className="min-h-screen bg-background px-page py-section font-sans text-text-primary">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-section">
-        <header className="flex items-start justify-between gap-4">
-          <div>
-            <p className="mb-2 text-sm text-text-secondary">Workspace</p>
-            <h1 className="text-2xl font-semibold">Decision Log</h1>
+    <div className="min-h-screen font-sans text-text-primary">
+      <TopBar
+        action={
+          <>
+            {!loading && !error && !hasDecisions && (
+              <button className="ui-button-secondary" onClick={loadSampleData} type="button">
+                <Wand2 aria-hidden="true" className="h-4 w-4" />
+                <span className="hidden sm:inline">Add sample data</span>
+                <span className="sm:hidden">Sample</span>
+              </button>
+            )}
+            <button className="ui-button-primary" onClick={() => setFormMode("create")} type="button">
+              <Plus aria-hidden="true" className="h-4 w-4" />
+              <span className="hidden sm:inline">New decision</span>
+              <span className="sm:hidden">New</span>
+            </button>
+          </>
+        }
+      />
+
+      <main className="ui-page flex flex-col gap-6 py-8 sm:py-10">
+        {!loading && !error && hasDecisions && (
+          <DecisionStats
+            activeCount={activeCount}
+            inactiveCount={decisions.length - activeCount}
+            onStatusFilterChange={setStatusFilter}
+            projectCount={availableProjects.length}
+            statusFilter={statusFilter}
+            total={decisions.length}
+          />
+        )}
+
+        {!loading && !error && hasDecisions && (
+          <DecisionFilters
+            onClearFilters={clearFilters}
+            onProjectFilterChange={setProjectFilter}
+            onSearchChange={setSearch}
+            onSortOrderChange={setSortOrder}
+            onStatusFilterChange={setStatusFilter}
+            projectFilter={projectFilter}
+            projects={availableProjects}
+            search={search}
+            sortOrder={sortOrder}
+            statusFilter={statusFilter}
+          />
+        )}
+
+        {!loading && !error && (
+          <p aria-live="polite" className="sr-only">
+            {filteredDecisions.length} decision{filteredDecisions.length !== 1 ? "s" : ""}
+          </p>
+        )}
+
+        {loading && <DecisionListSkeleton />}
+
+        {!loading && error && (
+          <EmptyState
+            actions={
+              <button className="ui-button-primary" onClick={() => void fetchDecisions()} type="button">
+                Try again
+              </button>
+            }
+            description={error || "Failed to load decisions"}
+            icon={AlertCircle}
+            title="Unable to load decisions"
+            tone="danger"
+          />
+        )}
+
+        {!loading && !error && !hasDecisions && (
+          <EmptyState
+            actions={
+              <>
+                <button className="ui-button-primary" onClick={() => setFormMode("create")} type="button">
+                  <Plus aria-hidden="true" className="h-4 w-4" />
+                  Add your first decision
+                </button>
+                <button className="ui-button-secondary" onClick={loadSampleData} type="button">
+                  <Wand2 aria-hidden="true" className="h-4 w-4" />
+                  Add sample data
+                </button>
+              </>
+            }
+            description="Record what was decided and why. Avoid re-deciding the same thing later."
+            icon={Sparkles}
+            title="Start your decision log"
+            tone="brand"
+          />
+        )}
+
+        {!loading && !error && hasDecisions && !hasResults && (
+          <EmptyState
+            actions={
+              <button className="ui-button-secondary" onClick={clearFilters} type="button">
+                Clear filters
+              </button>
+            }
+            description="Nothing matched. Try changing your filters."
+            icon={SearchX}
+            title="No matching decisions"
+          />
+        )}
+
+        {!loading && !error && hasResults && (
+          <div className="flex flex-col gap-5">
+            <DecisionList
+              decisions={visibleDecisions}
+              onDelete={setDecisionToDelete}
+              onEdit={startEditing}
+              onToggle={handleToggle}
+              query={debouncedSearch}
+            />
+            <DecisionPagination
+              onPageChange={setPage}
+              page={page}
+              pageCount={pageCount}
+              pageSize={PAGE_SIZE}
+              total={filteredDecisions.length}
+            />
           </div>
-          {formMode === null && <button className="rounded bg-primary px-4 py-2 text-sm font-medium text-surface transition-opacity hover:opacity-90" onClick={() => setFormMode("create")} type="button">Add decision</button>}
-        </header>
+        )}
+      </main>
 
-        {formMode !== null && <DecisionForm initialValues={formInitialValues} isEditing={formMode === "edit"} key={editingDecision?.id ?? "create"} onCancel={closeForm} onSubmit={handleFormSubmit} projectOptions={projectOptions} />}
+      {formMode !== null && (
+        <DecisionForm
+          initialValues={formInitialValues}
+          isEditing={formMode === "edit"}
+          key={editingDecision?.id ?? "create"}
+          onCancel={closeForm}
+          onSubmit={handleFormSubmit}
+          projectOptions={availableProjects}
+        />
+      )}
 
-        {!loading && !error && decisions.length > 0 && <DecisionFilters onProjectFilterChange={setProjectFilter} onSearchChange={setSearch} onStatusFilterChange={setStatusFilter} projectFilter={projectFilter} projects={availableProjects} search={search} statusFilter={statusFilter} />}
-        {loading && <DecisionTableSkeleton />}
-
-        {!loading && error && <section className="rounded border border-border bg-surface px-6 py-8"><h2 className="font-semibold">Unable to load decisions</h2><p className="mt-2 text-sm text-text-secondary">{error}</p><button className="mt-4 rounded bg-primary px-4 py-2 text-sm font-medium text-surface transition-opacity hover:opacity-90" onClick={() => void fetchDecisions()} type="button">Try again</button></section>}
-
-        {!loading && !error && decisions.length === 0 && <section className="rounded border border-border bg-surface px-6 py-8"><h2 className="font-semibold">No decisions yet</h2><p className="mt-2 text-sm text-text-secondary">Decisions you record will appear here.</p></section>}
-
-        {!loading && !error && decisions.length > 0 && filteredDecisions.length === 0 && <section className="rounded border border-border bg-surface px-6 py-8"><h2 className="font-semibold">No matching decisions</h2><p className="mt-2 text-sm text-text-secondary">Try changing your search or filters.</p><button className="mt-4 rounded border border-border bg-surface px-4 py-2 text-sm transition-opacity hover:opacity-70" onClick={() => { setSearch(""); setStatusFilter("all"); setProjectFilter("all"); }} type="button">Clear filters</button></section>}
-
-        {!loading && !error && filteredDecisions.length > 0 && <>
-          <DecisionTable decisions={visibleDecisions} onDelete={setDecisionToDelete} onEdit={(decision) => { setEditingDecision(decision); setFormMode("edit"); }} onToggle={handleToggle} />
-          <DecisionPagination onNext={() => setPage((currentPage) => currentPage + 1)} onPrevious={() => setPage((currentPage) => currentPage - 1)} page={page} pageCount={pageCount} />
-        </>}
-      </div>
-
-      {decisionToDelete && <DeleteDecisionDialog decision={decisionToDelete} onCancel={() => setDecisionToDelete(null)} onConfirm={handleDelete} />}
-    </main>
+      {decisionToDelete && (
+        <ConfirmDialog
+          confirmLabel="Delete"
+          description={`Remove “${decisionToDelete.text}”? This can’t be undone.`}
+          onCancel={() => setDecisionToDelete(null)}
+          onConfirm={confirmDelete}
+          title="Delete this decision?"
+          tone="danger"
+        />
+      )}
+    </div>
   );
 }

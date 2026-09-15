@@ -12,6 +12,7 @@ type DecisionsAction =
   | { type: "fetch/start" }
   | { type: "fetch/success"; payload: Decision[] }
   | { type: "fetch/error"; payload: string }
+  | { type: "set"; payload: Decision[] }
   | { type: "add"; payload: Decision }
   | { type: "update"; payload: Decision }
   | { type: "delete"; payload: string }
@@ -34,6 +35,8 @@ function decisionsReducer(
       return { decisions: action.payload, loading: false, error: null };
     case "fetch/error":
       return { ...state, loading: false, error: action.payload };
+    case "set":
+      return { ...state, decisions: action.payload };
     case "add":
       return { ...state, decisions: [action.payload, ...state.decisions] };
     case "update":
@@ -91,6 +94,10 @@ export function useDecisions() {
     });
   }, []);
 
+  const setDecisions = useCallback((decisions: Decision[]) => {
+    dispatch({ type: "set", payload: decisions });
+  }, []);
+
   const updateDecision = useCallback((decision: Decision) => {
     dispatch({ type: "update", payload: decision });
   }, []);
@@ -109,6 +116,7 @@ export function useDecisions() {
     error: state.error,
     fetchDecisions,
     addDecision,
+    setDecisions,
     updateDecision,
     deleteDecision,
     toggleDecisionStatus,

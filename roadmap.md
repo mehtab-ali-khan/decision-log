@@ -38,14 +38,14 @@ Standalone phases.
 - [x] Status filter, project filter
 
 ## Phase 8: Responsive mobile view
-- [ ] Card layout for mobile breakpoint, pagination retained
+- [x] Card timeline replaces the table at every breakpoint, pagination retained
 
 ## Phase 9: Landing page
-- [ ] Static content, single "Try Now" action to `/app`
+- [x] Static content, single "Try Now" action to `/app`
 
 ## Phase 10: SEO + polish
-- [ ] Title, meta description, Open Graph tags
-- [ ] Final visual pass against theme file
+- [x] Title, meta description, Open Graph tags, favicon
+- [x] Design-system pass: type scale, elevation, semantic colours, motion, focus states
 
 ## Phase 11: Deploy
 - [ ] GitHub Pages config (base path, deploy workflow)
