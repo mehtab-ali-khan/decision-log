@@ -21,8 +21,8 @@ Standalone phases.
 - [x] `/` landing placeholder, `/app` Decision Log
 
 ## Phase 4: Decision Log core UI (desktop list)
-- [ ] List view, all fields, newest-first, paginated (10/page)
-- [ ] Skeleton loader, empty state
+- [x] List view, all fields, newest-first, paginated (10/page)
+- [x] Skeleton loader, empty state
 
 ## Phase 5: Create decision
 - [ ] Form: default current date, project (hybrid select/text, auto-increment default), decision text, reason, active toggle default true
