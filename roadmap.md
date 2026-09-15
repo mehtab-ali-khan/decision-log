@@ -34,8 +34,8 @@ Standalone phases.
 - [x] Inline active/inactive toggle + toast
 
 ## Phase 7: Search + filters
-- [ ] Single search bar across all fields
-- [ ] Status filter, project filter
+- [x] Single search bar across all fields
+- [x] Status filter, project filter
 
 ## Phase 8: Responsive mobile view
 - [ ] Card layout for mobile breakpoint, pagination retained

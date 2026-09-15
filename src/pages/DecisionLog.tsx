@@ -254,6 +254,9 @@ export default function DecisionLog() {
   const [editingDecision, setEditingDecision] = useState<Decision | null>(null);
   const [decisionToDelete, setDecisionToDelete] = useState<Decision | null>(null);
   const [projectOptions, setProjectOptions] = useState<string[]>([]);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive">("all");
+  const [projectFilter, setProjectFilter] = useState("all");
 
   useEffect(() => {
     let mounted = true;
@@ -270,12 +273,44 @@ export default function DecisionLog() {
   }, []);
 
   const defaultProject = getNextProjectName(projectOptions);
+  const availableProjects = useMemo(
+    () =>
+      [...new Set([...projectOptions, ...decisions.map((decision) => decision.project)])].sort(
+        (first, second) => first.localeCompare(second),
+      ),
+    [decisions, projectOptions],
+  );
+  const filteredDecisions = useMemo(() => {
+    const normalizedSearch = search.trim().toLowerCase();
+
+    return decisions.filter((decision) => {
+      const matchesSearch =
+        normalizedSearch.length === 0 ||
+        [
+          decision.id,
+          decision.date,
+          formatDate(decision.date),
+          decision.project,
+          decision.text,
+          decision.reason,
+          decision.active ? "active" : "inactive",
+        ].some((value) => value.toLowerCase().includes(normalizedSearch));
+      const matchesStatus =
+        statusFilter === "all" ||
+        (statusFilter === "active" && decision.active) ||
+        (statusFilter === "inactive" && !decision.active);
+      const matchesProject =
+        projectFilter === "all" || decision.project === projectFilter;
+
+      return matchesSearch && matchesStatus && matchesProject;
+    });
+  }, [decisions, projectFilter, search, statusFilter]);
   const sortedDecisions = useMemo(
     () =>
-      [...decisions].sort((first, second) =>
+      [...filteredDecisions].sort((first, second) =>
         second.date.localeCompare(first.date),
       ),
-    [decisions],
+    [filteredDecisions],
   );
   const pageCount = Math.max(1, Math.ceil(sortedDecisions.length / PAGE_SIZE));
   const visibleDecisions = sortedDecisions.slice(
@@ -288,6 +323,10 @@ export default function DecisionLog() {
       setPage(pageCount);
     }
   }, [page, pageCount]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [projectFilter, search, statusFilter]);
 
   function handleFormSubmit(form: DecisionFormData) {
     if (formMode === "edit" && editingDecision) {
@@ -357,6 +396,50 @@ export default function DecisionLog() {
           />
         )}
 
+        {!loading && !error && decisions.length > 0 && (
+          <div className="grid gap-3 rounded border border-border bg-surface p-4 md:grid-cols-[minmax(0,1fr)_auto_auto]">
+            <label className="flex flex-col gap-2 text-sm font-medium">
+              Search decisions
+              <input
+                className="rounded border border-border bg-surface px-3 py-2 font-normal outline-none transition-colors focus:border-primary"
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Search all fields"
+                type="search"
+                value={search}
+              />
+            </label>
+            <label className="flex flex-col gap-2 text-sm font-medium">
+              Status
+              <select
+                className="rounded border border-border bg-surface px-3 py-2 font-normal outline-none transition-colors focus:border-primary"
+                onChange={(event) =>
+                  setStatusFilter(event.target.value as "all" | "active" | "inactive")
+                }
+                value={statusFilter}
+              >
+                <option value="all">All statuses</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </label>
+            <label className="flex flex-col gap-2 text-sm font-medium">
+              Project
+              <select
+                className="rounded border border-border bg-surface px-3 py-2 font-normal outline-none transition-colors focus:border-primary"
+                onChange={(event) => setProjectFilter(event.target.value)}
+                value={projectFilter}
+              >
+                <option value="all">All projects</option>
+                {availableProjects.map((project) => (
+                  <option key={project} value={project}>
+                    {project}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        )}
+
         {loading && <DecisionTableSkeleton />}
 
         {!loading && error && (
@@ -382,7 +465,27 @@ export default function DecisionLog() {
           </section>
         )}
 
-        {!loading && !error && decisions.length > 0 && (
+        {!loading && !error && decisions.length > 0 && filteredDecisions.length === 0 && (
+          <section className="rounded border border-border bg-surface px-6 py-8">
+            <h2 className="font-semibold">No matching decisions</h2>
+            <p className="mt-2 text-sm text-text-secondary">
+              Try changing your search or filters.
+            </p>
+            <button
+              className="mt-4 rounded border border-border bg-surface px-4 py-2 text-sm transition-opacity hover:opacity-70"
+              onClick={() => {
+                setSearch("");
+                setStatusFilter("all");
+                setProjectFilter("all");
+              }}
+              type="button"
+            >
+              Clear filters
+            </button>
+          </section>
+        )}
+
+        {!loading && !error && filteredDecisions.length > 0 && (
           <>
             <div className="overflow-hidden rounded border border-border bg-surface">
               <table className="w-full border-collapse text-left text-sm">
