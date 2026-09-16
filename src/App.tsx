@@ -6,7 +6,7 @@ import Landing from "./pages/Landing";
 
 export default function App() {
   return (
-    <BrowserRouter>
+    <BrowserRouter basename="/decision-log">
       <Toaster
         containerStyle={{ top: 80 }}
         position="top-right"
