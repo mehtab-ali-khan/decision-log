@@ -8,12 +8,12 @@
 
   <title>Decision Log: write down what your team decided and why</title>
   <meta name="description"
-    content="Keep a simple record of what your team decided and why, so you can look it up later instead of guessing." />
+    content="A single source of truth for what was decided, why, and whether it's still active." />
 
   <meta property="og:type" content="website" />
   <meta property="og:title" content="Decision Log" />
   <meta property="og:description"
-    content="Keep a simple record of what your team decided and why, so you can look it up later instead of guessing." />
+    content="A single source of truth for what was decided, why, and whether it's still active." />
   <meta property="og:image" content="https://mehtab-ali-khan.github.io/decision-log/preview-image.jpeg" />
   <meta property="og:image:width" content="5760" />
   <meta property="og:image:height" content="4320" />
@@ -22,7 +22,7 @@
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Decision Log" />
   <meta name="twitter:description"
-    content="Keep a simple record of what your team decided and why, so you can look it up later instead of guessing." />
+    content="A single source of truth for what was decided, why, and whether it's still active." />
   <meta name="twitter:image" content="/decision-search.png" />
 
   <link rel="icon" type="image/svg+xml"
@@ -31,6 +31,15 @@
   <link href="https://fonts.googleapis.com" rel="preconnect" />
   <link crossorigin href="https://fonts.gstatic.com" rel="preconnect" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <script>
+    (function () {
+      var p = new URLSearchParams(window.location.search).get('p');
+      if (p) {
+        window.history.replaceState(null, '', p);
+      }
+    })();
+  </script>
 </head>
 
 <body>

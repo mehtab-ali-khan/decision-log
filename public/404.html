@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+
+<head>
+    <script>
+        var segments = 1; // number of path segments to keep, "decision-log" = 1
+        var l = window.location;
+        var path = l.pathname.split('/').slice(0, 1 + segments).join('/');
+        var rest = l.pathname.split('/').slice(1 + segments).join('/');
+        l.replace(
+            l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
+            path + '/?p=/' + rest + l.search + l.hash
+        );
+    </script>
+</head>
+
+<body></body>
+
+</html>
