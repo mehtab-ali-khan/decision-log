@@ -100,7 +100,7 @@ const CAPTURE_STEPS = [
   },
 ];
 
-const DEMO_VIDEO_URL = "https://www.loom.com/embed/be7c44c601334530a35d87c129e9c2a9";
+const DEMO_VIDEO_URL = "https://www.loom.com/embed/cddbbe4aafdd4a07ab66338513f7b27b";
 
 const PLANS = [
   {
