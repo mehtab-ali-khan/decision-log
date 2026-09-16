@@ -212,6 +212,8 @@ function RevealSection({ children, className = "", id, onReveal }: RevealSection
 export default function Landing() {
   const [activeStep, setActiveStep] = useState(0);
   const [stepsInView, setStepsInView] = useState(false);
+  const [videoPrimed, setVideoPrimed] = useState(false);
+  const [videoLoaded, setVideoLoaded] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
   const activeCapture = CAPTURE_STEPS[activeStep];
 
@@ -229,6 +231,21 @@ export default function Landing() {
 
   function pickStep(index: number) {
     setActiveStep(index);
+  }
+
+  function primeVideo() {
+    setVideoPrimed(true);
+  }
+
+  function openVideo() {
+    primeVideo();
+    setVideoOpen(true);
+  }
+
+  function closeVideo() {
+    setVideoOpen(false);
+    setVideoPrimed(false);
+    setVideoLoaded(false);
   }
 
   return (
@@ -277,7 +294,10 @@ export default function Landing() {
                   </Link>
                   <button
                     className="ui-focus inline-flex items-center gap-2 rounded-full text-small font-medium text-white/75 transition-colors hover:text-white"
-                    onClick={() => setVideoOpen(true)}
+                    onClick={openVideo}
+                    onFocus={primeVideo}
+                    onPointerEnter={primeVideo}
+                    onPointerDown={primeVideo}
                     type="button"
                   >
                     <Play aria-hidden="true" className="h-3.5 w-3.5" fill="currentColor" />
@@ -333,7 +353,10 @@ export default function Landing() {
                 <button
                   aria-label="Play the Decision Log product walkthrough"
                   className="ui-focus pointer-events-auto relative flex h-[4.5rem] w-[4.5rem] items-center justify-center rounded-full bg-[#0B1020] shadow-overlay ring-1 ring-white/25 transition-transform hover:scale-105"
-                  onClick={() => setVideoOpen(true)}
+                  onClick={openVideo}
+                  onFocus={primeVideo}
+                  onPointerEnter={primeVideo}
+                  onPointerDown={primeVideo}
                   type="button"
                 >
                   <span
@@ -679,7 +702,10 @@ export default function Landing() {
                 </Link>
                 <button
                   className="ui-focus inline-flex h-12 items-center justify-center gap-2 rounded-md border border-white/20 px-5 text-[0.9375rem] font-medium text-white/85 transition-colors hover:bg-white/10 hover:text-white"
-                  onClick={() => setVideoOpen(true)}
+                  onClick={openVideo}
+                  onFocus={primeVideo}
+                  onPointerEnter={primeVideo}
+                  onPointerDown={primeVideo}
                   type="button"
                 >
                   Watch the walkthrough
@@ -692,19 +718,36 @@ export default function Landing() {
 
       <SiteFooter />
 
-      {videoOpen && (
+      {videoPrimed && (
         <Modal
+          isOpen={videoOpen}
           labelledBy="demo-video-title"
-          onClose={() => setVideoOpen(false)}
+          onClose={closeVideo}
           panelClassName="w-full max-w-4xl !bg-[#0B1020]"
         >
           <h2 className="sr-only" id="demo-video-title">
             Decision Log product walkthrough
           </h2>
-          <div className="relative h-0 w-full pb-[62.5%]">
+          <div aria-busy={!videoLoaded} className="relative h-0 w-full pb-[62.5%]">
+            {!videoLoaded && (
+              <div
+                aria-live="polite"
+                className="absolute inset-0 flex flex-col items-center justify-center gap-3 text-center text-small text-white/70"
+              >
+                <span
+                  aria-hidden="true"
+                  className="h-7 w-7 animate-spin rounded-full border-2 border-white/25 border-t-white"
+                />
+                Loading the walkthrough…
+              </div>
+            )}
             <iframe
               allowFullScreen
-              className="absolute inset-0 h-full w-full border-0"
+              className={`absolute inset-0 h-full w-full border-0 transition-opacity duration-200 ${
+                videoLoaded ? "opacity-100" : "opacity-0"
+              }`}
+              loading="eager"
+              onLoad={() => setVideoLoaded(true)}
               src={DEMO_VIDEO_URL}
               title="Decision Log product walkthrough"
             />

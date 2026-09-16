@@ -27,6 +27,7 @@ type ModalProps = {
   children: ReactNode;
   labelledBy: string;
   onClose: () => void;
+  isOpen?: boolean;
   variant?: "sheet" | "center";
   describedBy?: string;
   panelClassName?: string;
@@ -37,6 +38,7 @@ export function Modal({
   children,
   labelledBy,
   onClose,
+  isOpen = true,
   variant = "center",
   describedBy,
   panelClassName = "max-w-md p-6",
@@ -44,18 +46,25 @@ export function Modal({
 }: ModalProps) {
   const panelRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => lockBodyScroll(), []);
+  useEffect(() => {
+    if (!isOpen) return;
+    return lockBodyScroll();
+  }, [isOpen]);
 
   useEffect(() => {
+    if (!isOpen) return;
+
     const previouslyFocused = document.activeElement as HTMLElement | null;
     const panel = panelRef.current;
     const firstFocusable = panel?.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
     (firstFocusable ?? panel)?.focus();
 
     return () => previouslyFocused?.focus?.();
-  }, []);
+  }, [isOpen]);
 
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (!isOpen) return;
+
     if (event.key === "Escape") {
       event.stopPropagation();
       onClose();
@@ -84,11 +93,12 @@ export function Modal({
 
   return createPortal(
     <div
+      aria-hidden={!isOpen}
       className={`fixed inset-x-0 top-0 z-50 flex h-[100dvh] ${
         isSheet
           ? "items-end justify-end sm:items-stretch"
           : "items-center justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] sm:p-6"
-      }`}
+      } ${isOpen ? "" : "invisible pointer-events-none"}`}
       onKeyDown={handleKeyDown}
     >
       <div
