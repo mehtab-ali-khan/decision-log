@@ -48,4 +48,4 @@ Standalone phases.
 - [x] Design-system pass: type scale, elevation, semantic colours, motion, focus states
 
 ## Phase 11: Deploy
-- [ ] GitHub Pages config (base path, deploy workflow)
+- [x] GitHub Pages config (base path, deploy workflow)
