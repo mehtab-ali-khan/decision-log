@@ -36,7 +36,7 @@
     (function () {
       var p = new URLSearchParams(window.location.search).get('p');
       if (p) {
-        window.history.replaceState(null, '', p);
+        window.history.replaceState(null, '', '/decision-log' + p);
       }
     })();
   </script>
