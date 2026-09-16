@@ -1,7 +1,18 @@
 <!doctype html>
 <html lang="en">
 
-<head>
+  <head>
+    <script>
+      // GitHub Pages serves unknown routes with 404.html. Restore the route it
+      // passes here before the client-side router starts.
+      (function () {
+        const requestedPath = new URLSearchParams(window.location.search).get('p')
+        if (!requestedPath) return
+
+        const basePath = window.location.pathname.replace(/\/$/, '')
+        window.history.replaceState(null, '', basePath + requestedPath)
+      })()
+    </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="theme-color" content="#F7F8FB" />
