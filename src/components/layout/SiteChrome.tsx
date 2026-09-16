@@ -3,10 +3,10 @@ import { Link } from "react-router-dom";
 import { BrandMark } from "./TopBar";
 
 export const SITE_LINKS = [
-  { href: "/#demo", label: "Demo" },
-  { href: "/#why", label: "Why it works" },
-  { href: "/#product", label: "Product" },
-  { href: "/#pricing", label: "Pricing" },
+  { href: `${import.meta.env.BASE_URL}#demo`, label: "Demo" },
+  { href: `${import.meta.env.BASE_URL}#why`, label: "Why it works" },
+  { href: `${import.meta.env.BASE_URL}#product`, label: "Product" },
+  { href: `${import.meta.env.BASE_URL}#pricing`, label: "Pricing" },
 ];
 
 const SOCIAL_LINKS = [

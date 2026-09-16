@@ -211,7 +211,6 @@ function RevealSection({ children, className = "", id, onReveal }: RevealSection
 
 export default function Landing() {
   const [activeStep, setActiveStep] = useState(0);
-  const [stepPicked, setStepPicked] = useState(false);
   const [stepsInView, setStepsInView] = useState(false);
   const [videoOpen, setVideoOpen] = useState(false);
   const activeCapture = CAPTURE_STEPS[activeStep];
@@ -219,18 +218,16 @@ export default function Landing() {
   const handleStepsReveal = useCallback(() => setStepsInView(true), []);
 
   useEffect(() => {
-    if (!stepsInView || stepPicked) return;
+    if (!stepsInView) return;
 
-    const timers = [
-      window.setTimeout(() => setActiveStep(1), 1200),
-      window.setTimeout(() => setActiveStep(2), 3600),
-    ];
+    const timer = window.setInterval(() => {
+      setActiveStep((currentStep) => (currentStep + 1) % CAPTURE_STEPS.length);
+    }, 1800);
 
-    return () => timers.forEach((timer) => window.clearTimeout(timer));
-  }, [stepPicked, stepsInView]);
+    return () => window.clearInterval(timer);
+  }, [stepsInView]);
 
   function pickStep(index: number) {
-    setStepPicked(true);
     setActiveStep(index);
   }
 
