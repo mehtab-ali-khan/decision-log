@@ -40,7 +40,7 @@ export function DecisionPagination({
       </p>
 
       {pageCount > 1 && (
-        <div className="flex items-center gap-1">
+        <div className="flex max-w-full items-center gap-0 sm:gap-1">
           <button
             aria-label="Previous page"
             className="ui-button-icon"
@@ -60,7 +60,7 @@ export function DecisionPagination({
               <button
                 aria-current={item === page ? "page" : undefined}
                 aria-label={`Page ${item}`}
-                className={`ui-focus h-8 min-w-[2rem] rounded-md px-2 text-small font-medium tabular-nums transition-colors ${
+                className={`ui-focus h-8 min-w-[1.75rem] rounded-md px-1 text-small font-medium tabular-nums transition-colors sm:min-w-[2rem] sm:px-2 ${
                   item === page
                     ? "bg-primary text-surface shadow-raised"
                     : "text-text-secondary hover:bg-muted hover:text-text-primary"

@@ -84,8 +84,10 @@ export function Modal({
 
   return createPortal(
     <div
-      className={`fixed inset-0 z-50 flex ${
-        isSheet ? "items-end justify-end sm:items-stretch" : "items-center justify-center p-4"
+      className={`fixed inset-x-0 top-0 z-50 flex h-[100dvh] ${
+        isSheet
+          ? "items-end justify-end sm:items-stretch"
+          : "items-center justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))] pt-[max(1rem,env(safe-area-inset-top))] sm:p-6"
       }`}
       onKeyDown={handleKeyDown}
     >

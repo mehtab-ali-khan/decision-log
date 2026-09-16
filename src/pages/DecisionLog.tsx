@@ -189,14 +189,22 @@ export default function DecisionLog() {
         action={
           <>
             {!loading && !error && !hasDecisions && (
-              <button className="ui-button-secondary" onClick={loadSampleData} type="button">
-                <Wand2 aria-hidden="true" className="h-4 w-4" />
+              <button
+                className="ui-button-secondary max-[420px]:px-3"
+                onClick={loadSampleData}
+                type="button"
+              >
+                <Wand2 aria-hidden="true" className="h-4 w-4 max-[420px]:hidden" />
                 <span className="hidden sm:inline">Add sample data</span>
                 <span className="sm:hidden">Sample</span>
               </button>
             )}
-            <button className="ui-button-primary" onClick={() => setFormMode("create")} type="button">
-              <Plus aria-hidden="true" className="h-4 w-4" />
+            <button
+              className="ui-button-primary max-[420px]:px-3"
+              onClick={() => setFormMode("create")}
+              type="button"
+            >
+              <Plus aria-hidden="true" className="h-4 w-4 max-[420px]:hidden" />
               <span className="hidden sm:inline">New decision</span>
               <span className="sm:hidden">New</span>
             </button>

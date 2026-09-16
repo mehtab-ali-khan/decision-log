@@ -90,7 +90,7 @@ export function DecisionForm({
       <Modal
         labelledBy={`${fieldId}-title`}
         onClose={requestClose}
-        panelClassName="max-h-[90vh] max-w-xl"
+        panelClassName="max-h-[calc(100dvh_-_2rem_-_env(safe-area-inset-top)_-_env(safe-area-inset-bottom))] max-w-xl sm:max-h-[90vh]"
       >
         <form className="flex min-h-0 flex-1 flex-col" noValidate onSubmit={handleSubmit}>
           <header className="flex items-start justify-between gap-4 border-b border-border/70 px-5 py-4 sm:px-6">

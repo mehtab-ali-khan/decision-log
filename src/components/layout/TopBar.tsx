@@ -20,13 +20,13 @@ export function BrandMark({ className = "h-8 w-8" }: { className?: string }) {
 export function TopBar({ action }: TopBarProps) {
   return (
     <header className="sticky top-0 z-40 border-b border-border/60 bg-surface/80 backdrop-blur-md">
-      <div className="ui-page flex h-16 items-center justify-between gap-4">
-        <Link className="ui-focus flex items-center gap-2.5 rounded-md" to="/">
-          <BrandMark />
-          <span className="text-h3 text-text-primary">Decision Log</span>
+      <div className="ui-page flex h-16 items-center justify-between gap-2 sm:gap-4">
+        <Link className="ui-focus flex shrink-0 items-center gap-2 whitespace-nowrap rounded-md sm:gap-2.5" to="/">
+          <BrandMark className="h-7 w-7 sm:h-8 sm:w-8" />
+          <span className="text-small font-semibold text-text-primary sm:text-h3">Decision Log</span>
         </Link>
 
-        <div className="flex items-center gap-2">{action}</div>
+        <div className="flex shrink-0 items-center gap-2">{action}</div>
       </div>
     </header>
   );
