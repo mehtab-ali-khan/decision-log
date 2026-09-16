@@ -1,16 +1,21 @@
 <!doctype html>
-<html>
+<html lang="en">
 
 <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Redirecting…</title>
     <script>
-        var segments = 1; // number of path segments to keep, "decision-log" = 1
-        var l = window.location;
-        var path = l.pathname.split('/').slice(0, 1 + segments).join('/');
-        var rest = l.pathname.split('/').slice(1 + segments).join('/');
-        l.replace(
-            l.protocol + '//' + l.hostname + (l.port ? ':' + l.port : '') +
-            path + '/?p=/' + rest + l.search + l.hash
-        );
+        (function () {
+            const basePath = '/decision-log'
+            const route = window.location.pathname.startsWith(basePath)
+                ? window.location.pathname.slice(basePath.length) || '/'
+                : '/'
+
+            window.location.replace(
+                basePath + '/?p=' + encodeURIComponent(route + window.location.search + window.location.hash)
+            )
+        })()
     </script>
 </head>
 
