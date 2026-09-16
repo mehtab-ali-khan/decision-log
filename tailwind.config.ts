@@ -42,6 +42,10 @@ export default {
           from: { backgroundPosition: "-200% 0" },
           to: { backgroundPosition: "200% 0" },
         },
+        marquee: {
+          from: { transform: "translateX(0)" },
+          to: { transform: "translateX(-50%)" },
+        },
       },
       animation: {
         "fade-in": `fade-in 180ms ${EASE_OUT_EXPRESSIVE} both`,
@@ -51,6 +55,7 @@ export default {
         "slide-in-right": `slide-in-right 300ms ${EASE_OUT_EXPRESSIVE} both`,
         "slide-in-bottom": `slide-in-bottom 300ms ${EASE_OUT_EXPRESSIVE} both`,
         shimmer: "shimmer 1.6s linear infinite",
+        marquee: "marquee 38s linear infinite",
       },
     },
   },

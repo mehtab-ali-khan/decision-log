@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
+import Contact from "./pages/Contact";
 import DecisionLog from "./pages/DecisionLog";
 import Landing from "./pages/Landing";
 
@@ -24,6 +25,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Landing />} />
         <Route path="/app" element={<DecisionLog />} />
+        <Route path="/contact" element={<Contact />} />
       </Routes>
     </BrowserRouter>
   );
